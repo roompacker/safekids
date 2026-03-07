@@ -1,0 +1,17 @@
+{
+  "name": "SafeKids - 아이 안심 알리미",
+  "short_name": "SafeKids",
+  "description": "아이의 안전한 등하교를 함께하는 위치 알림 서비스",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#1e3a5f",
+  "theme_color": "#1e3a5f",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛡️</text></svg>",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}
