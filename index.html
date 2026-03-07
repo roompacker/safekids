@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#1e3a5f">
+<title>SafeKids - 아이 안심 알리미</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛡️</text></svg>">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root{--primary:#1e3a5f;--primary-light:#2d5a8e;--primary-bright:#4a90d9;--accent:#ff6b35;--success:#2ecc71;--warning:#f39c12;--danger:#e74c3c;--bg:#f0f4f8;--card:#fff;--text:#1a2332;--text-sub:#6b7d93;--text-light:#9badbf;--border:#e1e8ef;--shadow:0 2px 12px rgba(30,58,95,0.08);--radius:16px;--radius-sm:10px;--safe-top:env(safe-area-inset-top,0px);--safe-bottom:env(safe-area-inset-bottom,0px)}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden;font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text)}
+#app{max-width:430px;margin:0 auto;height:100vh;display:flex;flex-direction:column;position:relative;background:var(--bg)}
+.auth-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:24px;background:linear-gradient(160deg,#1e3a5f 0%,#2d5a8e 40%,#4a90d9 100%)}
+.auth-logo{font-size:64px;margin-bottom:8px;animation:bounceIn .6s ease-out}
+.auth-title{font-size:28px;font-weight:900;color:#fff;margin-bottom:4px}
+.auth-subtitle{font-size:14px;color:rgba(255,255,255,.7);margin-bottom:36px}
+.auth-card{background:#fff;border-radius:24px;padding:32px 24px;width:100%;max-width:360px;box-shadow:0 20px 60px rgba(0,0,0,.2)}
+.auth-tabs{display:flex;gap:4px;background:var(--bg);border-radius:12px;padding:4px;margin-bottom:24px}
+.auth-tab{flex:1;padding:10px;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;background:transparent;color:var(--text-sub);transition:all .25s;font-family:inherit}
+.auth-tab.active{background:var(--primary);color:#fff}
+.form-group{margin-bottom:16px}
+.form-label{display:block;font-size:13px;font-weight:600;color:var(--text-sub);margin-bottom:6px}
+.form-input{width:100%;padding:12px 16px;border:2px solid var(--border);border-radius:var(--radius-sm);font-size:15px;font-family:inherit;outline:none;transition:border-color .2s}
+.form-input:focus{border-color:var(--primary-bright)}
+.btn{width:100%;padding:14px;border:none;border-radius:var(--radius-sm);font-size:15px;font-weight:700;font-family:inherit;cursor:pointer;transition:all .2s}
+.btn-primary{background:linear-gradient(135deg,var(--primary),var(--primary-light));color:#fff;box-shadow:0 4px 16px rgba(30,58,95,.3)}
+.btn-primary:active{transform:scale(.98)}
+.btn-secondary{background:var(--bg);color:var(--text-sub)}
+.btn-success{background:linear-gradient(135deg,#27ae60,#2ecc71);color:#fff}
+.btn-sm{padding:10px 18px;font-size:13px;width:auto;border-radius:8px}
+.auth-divider{display:flex;align-items:center;gap:12px;margin:20px 0;color:var(--text-light);font-size:12px}
+.auth-divider::before,.auth-divider::after{content:'';flex:1;height:1px;background:var(--border)}
+.auth-error{background:#fef2f2;color:var(--danger);padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:12px;display:none;border-left:3px solid var(--danger)}
+.auth-error.show{display:block;animation:shake .3s}
+.header{background:linear-gradient(135deg,var(--primary),var(--primary-light));padding:calc(12px + var(--safe-top)) 20px 16px;color:#fff;flex-shrink:0;border-radius:0 0 24px 24px;box-shadow:0 4px 20px rgba(30,58,95,.25);position:relative;z-index:10}
+.header-top{display:flex;justify-content:space-between;align-items:center}
+.header-brand{font-size:11px;opacity:.7;letter-spacing:1px}
+.header-title{font-size:22px;font-weight:900;margin-top:2px}
+.header-clock{font-size:20px;font-weight:800;font-variant-numeric:tabular-nums}
+.header-date{font-size:11px;opacity:.7;margin-top:2px}
+.child-selector{display:flex;gap:8px;margin-top:14px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none}
+.child-selector::-webkit-scrollbar{display:none}
+.child-chip{display:flex;align-items:center;gap:8px;padding:8px 16px;border-radius:50px;white-space:nowrap;background:rgba(255,255,255,.1);border:2px solid transparent;cursor:pointer;transition:all .25s;font-size:14px;color:#fff}
+.child-chip.active{background:rgba(255,255,255,.25);border-color:#fff;font-weight:700}
+.child-chip .dot{width:8px;height:8px;border-radius:50%}
+.user-info{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.1);border-radius:12px;padding:10px 14px;margin-top:12px}
+.user-info .email{font-size:12px;opacity:.8;flex:1;overflow:hidden;text-overflow:ellipsis}
+.logout-btn{background:rgba(255,255,255,.15);border:none;color:#fff;padding:6px 12px;border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit}
+.content{flex:1;overflow-y:auto;padding:16px 16px calc(72px + var(--safe-bottom));-webkit-overflow-scrolling:touch}
+.card{background:var(--card);border-radius:var(--radius);padding:18px;margin-bottom:14px;box-shadow:var(--shadow);border:1px solid var(--border)}
+.card-title{font-size:16px;font-weight:800;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.card-title .count{font-size:12px;font-weight:500;color:var(--text-light)}
+.status-badge{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:20px;font-size:13px;font-weight:700}
+.status-badge .dot{width:8px;height:8px;border-radius:50%}
+.status-badge.safe{background:rgba(46,204,113,.15);color:var(--success)}
+.status-badge.safe .dot{background:var(--success)}
+.status-badge.moving{background:rgba(74,144,217,.15);color:var(--primary-bright)}
+.status-badge.moving .dot{background:var(--primary-bright)}
+.status-badge.late{background:rgba(231,76,60,.15);color:var(--danger)}
+.status-badge.late .dot{background:var(--danger)}
+.status-badge.unknown{background:rgba(155,173,191,.15);color:var(--text-light)}
+.status-badge.unknown .dot{background:var(--text-light)}
+.map-container{background:linear-gradient(135deg,#e8f4e8,#d4ebd4);border-radius:14px;overflow:hidden;border:2px solid #c8e0c8;position:relative}
+.map-legend{position:absolute;top:8px;left:8px;background:rgba(255,255,255,.92);border-radius:10px;padding:6px 10px;font-size:11px;z-index:2;box-shadow:0 2px 8px rgba(0,0,0,.1)}
+.map-legend-title{font-weight:700;margin-bottom:4px;color:#1a4d1a}
+.alert-item{border-radius:14px;padding:14px 16px;margin-bottom:10px;display:flex;align-items:center;gap:12px;animation:slideIn .3s}
+.alert-item.arrive{background:linear-gradient(135deg,#dcfce7,#bbf7d0);border-left:4px solid var(--success)}
+.alert-item.depart{background:linear-gradient(135deg,#dbeafe,#bfdbfe);border-left:4px solid var(--primary-bright)}
+.alert-item.late{background:linear-gradient(135deg,#fee2e2,#fecaca);border-left:4px solid var(--danger)}
+.alert-item.warning{background:linear-gradient(135deg,#fef9c3,#fde68a);border-left:4px solid var(--warning)}
+.schedule-item,.place-item{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border)}
+.schedule-item:last-child,.place-item:last-child{border-bottom:none}
+.route-item{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)}
+.route-item:last-child{border-bottom:none}
+.route-dot{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.route-dot.place{background:#dbeafe}
+.route-dot.moving{background:#f3f4f6}
+.setting-item{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border)}
+.setting-item:last-child{border-bottom:none}
+.toggle{width:48px;height:28px;border-radius:14px;position:relative;cursor:pointer;transition:background .25s;flex-shrink:0}
+.toggle.on{background:var(--primary-bright)}
+.toggle.off{background:#d1d5db}
+.toggle .knob{width:22px;height:22px;border-radius:50%;background:#fff;position:absolute;top:3px;box-shadow:0 2px 4px rgba(0,0,0,.15);transition:left .25s}
+.toggle.on .knob{left:23px}
+.toggle.off .knob{left:3px}
+.tab-bar{display:flex;justify-content:space-around;background:#fff;border-top:1px solid var(--border);padding:8px 0 calc(8px + var(--safe-bottom));box-shadow:0 -4px 20px rgba(0,0,0,.05);flex-shrink:0}
+.tab-item{display:flex;flex-direction:column;align-items:center;gap:2px;background:none;border:none;cursor:pointer;color:var(--text-light);font-size:10px;font-weight:500;padding:4px 12px;transition:color .2s;font-family:inherit}
+.tab-item.active{color:var(--primary-bright);font-weight:700}
+.tab-item .tab-icon{font-size:22px}
+.fab{width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,var(--primary-bright),var(--primary));color:#fff;border:none;font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(30,58,95,.3);flex-shrink:0}
+.delete-btn{background:none;border:none;cursor:pointer;color:var(--danger);font-size:16px;padding:6px 10px;border-radius:8px}
+.modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);z-index:200;display:flex;align-items:flex-end;justify-content:center;animation:fadeIn .2s}
+.modal-content{background:#fff;border-radius:24px 24px 0 0;padding:24px 20px calc(24px + var(--safe-bottom));width:100%;max-width:430px;max-height:85vh;overflow-y:auto;animation:slideUp .3s ease-out}
+.modal-title{font-size:18px;font-weight:900;margin-bottom:20px}
+.modal-actions{display:flex;gap:10px;margin-top:24px}
+.modal-actions .btn{flex:1}
+.day-selector{display:flex;gap:6px}
+.day-btn{width:38px;height:38px;border-radius:50%;border:none;cursor:pointer;font-size:13px;font-weight:600;transition:all .2s;font-family:inherit}
+.day-btn.active{background:var(--primary-bright);color:#fff}
+.day-btn.inactive{background:var(--bg);color:var(--text-sub)}
+.child-mode{min-height:100vh;background:linear-gradient(160deg,#27ae60 0%,#2ecc71 40%,#58d68d 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;color:#fff;text-align:center}
+.child-mode-icon{font-size:80px;margin-bottom:16px}
+.child-mode-title{font-size:28px;font-weight:900;margin-bottom:8px}
+.child-mode-sub{font-size:14px;opacity:.85;margin-bottom:32px}
+.child-mode-status{background:rgba(255,255,255,.2);border-radius:20px;padding:20px 24px;width:100%;max-width:320px;margin-bottom:20px;backdrop-filter:blur(10px)}
+.child-mode-gps{display:flex;align-items:center;gap:10px;justify-content:center;margin-bottom:12px}
+.child-mode-gps .pulse{width:14px;height:14px;border-radius:50%;background:#fff;animation:pulse 1.5s infinite}
+.child-mode-coords{font-size:12px;opacity:.7;font-family:monospace}
+.child-mode-place{font-size:18px;font-weight:700;margin-top:8px}
+.child-mode-time{font-size:13px;opacity:.7;margin-top:4px}
+.child-mode-stop{background:rgba(255,255,255,.25);border:2px solid #fff;color:#fff;padding:14px 32px;border-radius:50px;font-size:16px;font-weight:700;cursor:pointer;font-family:inherit;margin-top:20px}
+.toast{position:fixed;top:20px;left:50%;transform:translateX(-50%);background:var(--text);color:#fff;padding:12px 20px;border-radius:12px;font-size:14px;font-weight:600;z-index:300;box-shadow:0 8px 32px rgba(30,58,95,.12);animation:slideDown .3s;max-width:90%}
+.loading-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(160deg,#1e3a5f 0%,#2d5a8e 40%,#4a90d9 100%);color:#fff}
+.loading-spinner{width:40px;height:40px;border:4px solid rgba(255,255,255,.2);border-top-color:#fff;border-radius:50%;animation:spin .8s linear infinite;margin-top:20px}
+.empty-state{text-align:center;padding:24px;color:var(--text-light);font-size:14px}
+.empty-state .icon{font-size:36px;margin-bottom:8px}
+.role-badge{font-size:11px;padding:3px 10px;border-radius:12px;font-weight:600}
+.role-badge.parent{background:rgba(74,144,217,.15);color:var(--primary-bright)}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+@keyframes slideDown{from{opacity:0;transform:translate(-50%,-20px)}to{opacity:1;transform:translate(-50%,0)}}
+@keyframes slideIn{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
+@keyframes bounceIn{0%{transform:scale(.5);opacity:0}60%{transform:scale(1.1)}100%{transform:scale(1);opacity:1}}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.hidden{display:none!important}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="loadingScreen" class="loading-screen"><div style="font-size:64px">🛡️</div><div style="font-size:22px;font-weight:900;margin-top:12px">SafeKids</div><div class="loading-spinner"></div></div>
+  <div id="childModeScreen" class="child-mode hidden">
+    <div class="child-mode-icon">📡</div><div class="child-mode-title">위치 전송 중</div><div class="child-mode-sub">부모님이 실시간으로 확인할 수 있어요</div>
+    <div class="child-mode-status"><div class="child-mode-gps"><div class="pulse"></div> <span id="childGpsStatus">GPS 연결중...</span></div><div class="child-mode-coords" id="childCoords">위치 수신 대기중</div><div class="child-mode-place" id="childCurrentPlace">-</div><div class="child-mode-time" id="childLastUpdate">-</div></div>
+    <div id="childTrackingStats" style="font-size:13px;opacity:.8;margin-bottom:12px"></div>
+    <button class="child-mode-stop" onclick="stopChildMode()">🛑 추적 중지하고 돌아가기</button>
+  </div>
+  <div id="authScreen" class="auth-screen hidden">
+    <div class="auth-logo">🛡️</div><div class="auth-title">SafeKids</div><div class="auth-subtitle">아이의 안전한 등하교를 함께해요</div>
+    <div class="auth-card">
+      <div class="auth-tabs"><button class="auth-tab active" onclick="switchAuthTab('login')">로그인</button><button class="auth-tab" onclick="switchAuthTab('register')">회원가입</button></div>
+      <div id="authError" class="auth-error"></div>
+      <div id="loginForm"><div class="form-group"><label class="form-label">이메일</label><input type="email" id="loginEmail" class="form-input" placeholder="example@email.com" autocomplete="email"></div><div class="form-group"><label class="form-label">비밀번호</label><input type="password" id="loginPassword" class="form-input" placeholder="비밀번호 입력" autocomplete="current-password"></div><button class="btn btn-primary" onclick="handleLogin()" id="loginBtn">로그인</button></div>
+      <div id="registerForm" class="hidden"><div class="form-group"><label class="form-label">이름 (보호자)</label><input type="text" id="regName" class="form-input" placeholder="홍길동"></div><div class="form-group"><label class="form-label">이메일</label><input type="email" id="regEmail" class="form-input" placeholder="example@email.com" autocomplete="email"></div><div class="form-group"><label class="form-label">비밀번호 (6자 이상)</label><input type="password" id="regPassword" class="form-input" placeholder="비밀번호 입력" autocomplete="new-password"></div><button class="btn btn-primary" onclick="handleRegister()" id="regBtn">가입하기</button></div>
+      <div class="auth-divider">또는</div><button class="btn btn-secondary" onclick="handleDemoLogin()" style="text-align:center">🎮 데모로 체험하기</button>
+    </div>
+  </div>
+  <div id="mainApp" class="hidden" style="display:flex;flex-direction:column;height:100vh">
+    <div class="header">
+      <div class="header-top"><div><div class="header-brand">SafeKids 🛡️</div><div class="header-title" id="headerTitle">아이 안심 알리미</div></div><div style="text-align:right"><div class="header-clock" id="headerClock">--:--</div><div class="header-date" id="headerDate">--</div></div></div>
+      <div class="child-selector" id="childSelector"></div>
+      <div class="user-info"><span>👤</span><span class="email" id="userEmail">--</span><button class="logout-btn" onclick="handleLogout()">로그아웃</button></div>
+    </div>
+    <div class="content" id="contentArea"></div>
+    <div class="tab-bar">
+      <button class="tab-item active" data-tab="home" onclick="switchTab('home')"><span class="tab-icon">🏠</span><span>홈</span></button>
+      <button class="tab-item" data-tab="map" onclick="switchTab('map')"><span class="tab-icon">🗺️</span><span>경로</span></button>
+      <button class="tab-item" data-tab="places" onclick="switchTab('places')"><span class="tab-icon">📍</span><span>장소/일정</span></button>
+      <button class="tab-item" data-tab="settings" onclick="switchTab('settings')"><span class="tab-icon">⚙️</span><span>설정</span></button>
+    </div>
+  </div>
+</div>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script>
+const firebaseConfig={apiKey:"AIzaSyDsLw-L6kG3XCUjbZJRcup_Eh6c_iQXjzM",authDomain:"safekids-220ff.firebaseapp.com",projectId:"safekids-220ff",storageBucket:"safekids-220ff.firebasestorage.app",messagingSenderId:"421257265182",appId:"1:421257265182:web:8f4d6d1b2da3a807442e0f"};
+let app,auth,db,isDemo=false;
+try{app=firebase.initializeApp(firebaseConfig);auth=firebase.auth();db=firebase.firestore();console.log("Firebase OK")}catch(e){console.error(e);isDemo=true}
+
+const State={user:null,familyId:null,currentTab:'home',selectedChild:null,children:[],places:[],schedules:[],alerts:[],locations:[],isChildMode:false,trackingWatchId:null,lastKnownPosition:null,locationListeners:{},settings:{arriveAlert:true,departAlert:true,lateWarning:true,routeDeviation:false,batteryAlert:true}};
+
+const DEMO={children:[{id:'c1',name:'지우',avatar:'👧',grade:'초3',status:'safe',currentPlace:'영종초등학교',lastLat:37.4932,lastLng:126.4928,lastUpdate:Date.now()-300000},{id:'c2',name:'민준',avatar:'👦',grade:'초1',status:'moving',currentPlace:'이동중',lastLat:37.4942,lastLng:126.4895,lastUpdate:Date.now()-60000}],places:[{id:'p1',name:'집',type:'home',lat:37.4955,lng:126.4065,radius:100},{id:'p2',name:'영종초등학교',type:'school',lat:37.4932,lng:126.4928,radius:150},{id:'p3',name:'수학학원',type:'academy',lat:37.4948,lng:126.4892,radius:80}],schedules:[{id:'s1',placeId:'p2',childId:'c1',arriveBy:'08:30',leaveAfter:'14:30',days:[1,2,3,4,5],label:'등교'},{id:'s2',placeId:'p3',childId:'c1',arriveBy:'15:30',leaveAfter:'17:00',days:[1,2,3,4,5],label:'수학학원'},{id:'s3',placeId:'p1',childId:'c1',arriveBy:'17:30',leaveAfter:null,days:[1,2,3,4,5],label:'귀가'}],alerts:[{id:'a1',type:'arrive',childId:'c1',title:'지우 - 학교 도착',message:'영종초등학교에 08:25에 도착',time:'오늘 08:25'},{id:'a2',type:'depart',childId:'c1',title:'지우 - 집 출발',message:'집에서 08:00에 출발',time:'오늘 08:00'},{id:'a3',type:'late',childId:'c2',title:'민준 - 도착 지연',message:'수학학원 도착 예정시간 초과!',time:'오늘 15:35'}],locations:{c1:[{lat:37.4955,lng:126.4065,time:Date.now()-7200000,place:'집'},{lat:37.495,lng:126.42,time:Date.now()-6600000,place:null},{lat:37.4945,lng:126.44,time:Date.now()-6000000,place:null},{lat:37.4938,lng:126.46,time:Date.now()-5400000,place:null},{lat:37.4932,lng:126.4928,time:Date.now()-4800000,place:'영종초등학교'}],c2:[{lat:37.4932,lng:126.4928,time:Date.now()-1800000,place:'영종초등학교'},{lat:37.4936,lng:126.491,time:Date.now()-1200000,place:null},{lat:37.4942,lng:126.4895,time:Date.now()-600000,place:null}]}};
+
+const PI={home:'🏠',school:'🏫',academy:'📚',other:'📍'};
+const SL={safe:'안전',moving:'이동중',late:'지연',unknown:'미확인'};
+const DN=['일','월','화','수','목','금','토'];
+const AI={arrive:'✅',depart:'🚶',late:'⚠️',warning:'🔔'};
+
+// GPS Module
+const GPS={
+  ok(){return 'geolocation' in navigator},
+  start(cb){if(!this.ok()){showToast('⚠️ GPS 미지원');return null}return navigator.geolocation.watchPosition(p=>{const l={lat:p.coords.latitude,lng:p.coords.longitude,accuracy:p.coords.accuracy,timestamp:Date.now()};State.lastKnownPosition=l;cb(l)},e=>{if(e.code===1)showToast('⚠️ 위치 권한을 허용해주세요');else showToast('⚠️ GPS 오류')},{enableHighAccuracy:true,timeout:15000,maximumAge:10000})},
+  stop(id){if(id!==null)navigator.geolocation.clearWatch(id)},
+  getPos(){return new Promise((r,j)=>{if(!this.ok()){j('GPS 미지원');return}navigator.geolocation.getCurrentPosition(p=>r({lat:p.coords.latitude,lng:p.coords.longitude,accuracy:p.coords.accuracy}),j,{enableHighAccuracy:true,timeout:10000})})},
+  dist(a,b,c,d){const R=6371000,dL=(c-a)*Math.PI/180,dG=(d-b)*Math.PI/180,x=Math.sin(dL/2)**2+Math.cos(a*Math.PI/180)*Math.cos(c*Math.PI/180)*Math.sin(dG/2)**2;return R*2*Math.atan2(Math.sqrt(x),Math.sqrt(1-x))},
+  fence(lat,lng){for(const p of State.places){if(this.dist(lat,lng,p.lat,p.lng)<=(p.radius||100))return p}return null}
+};
+
+async function saveLoc(cid,loc){
+  const place=GPS.fence(loc.lat,loc.lng);
+  if(isDemo){if(!DEMO.locations[cid])DEMO.locations[cid]=[];DEMO.locations[cid].push({lat:loc.lat,lng:loc.lng,time:loc.timestamp||Date.now(),place:place?.name||null});const c=State.children.find(x=>x.id===cid);if(c){c.lastLat=loc.lat;c.lastLng=loc.lng;c.lastUpdate=Date.now();c.currentPlace=place?.name||'이동중';c.status=place?'safe':'moving'}return}
+  try{await db.collection('families').doc(State.familyId).collection('locations').add({childId:cid,lat:loc.lat,lng:loc.lng,accuracy:loc.accuracy||0,place:place?.name||null,placeId:place?.id||null,timestamp:firebase.firestore.FieldValue.serverTimestamp(),clientTime:loc.timestamp||Date.now()});
+  await db.collection('families').doc(State.familyId).collection('children').doc(cid).update({lastLat:loc.lat,lastLng:loc.lng,lastUpdate:firebase.firestore.FieldValue.serverTimestamp(),currentPlace:place?.name||'이동중',status:place?'safe':'moving'})}catch(e){console.error(e)}
+}
+
+async function loadLocs(cid){if(isDemo){State.locations=DEMO.locations[cid]||[];return}try{const t=new Date();t.setHours(0,0,0,0);const s=await db.collection('families').doc(State.familyId).collection('locations').where('childId','==',cid).where('clientTime','>=',t.getTime()).orderBy('clientTime','asc').limit(200).get();State.locations=s.docs.map(d=>{const x=d.data();return{lat:x.lat,lng:x.lng,time:x.clientTime,place:x.place}})}catch(e){State.locations=[]}}
+
+function listenChild(cid){if(isDemo||!db)return;if(State.locationListeners[cid])State.locationListeners[cid]();
+State.locationListeners[cid]=db.collection('families').doc(State.familyId).collection('children').doc(cid).onSnapshot(doc=>{if(!doc.exists)return;const d=doc.data(),c=State.children.find(x=>x.id===cid);if(c){c.lastLat=d.lastLat;c.lastLng=d.lastLng;c.lastUpdate=d.lastUpdate?.toMillis?.()||Date.now();c.currentPlace=d.currentPlace||'미확인';c.status=d.status||'unknown';renderChildSelector();if(State.currentTab==='home'||State.currentTab==='map')renderCurrentTab()}})}
+
+let lastFencePlace=null;
+function checkAlert(cid,lat,lng){
+  const place=GPS.fence(lat,lng),c=State.children.find(x=>x.id===cid);if(!c)return;
+  const now=new Date(),ts=`${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}`;
+  if(place&&lastFencePlace!==place.id){const a={id:'a'+Date.now(),type:'arrive',childId:cid,title:`${c.name} - ${place.name} 도착`,message:`${place.name}에 ${ts}에 도착`,time:`오늘 ${ts}`};State.alerts.unshift(a);if(!isDemo&&db)db.collection('families').doc(State.familyId).collection('alerts').add({...a,createdAt:firebase.firestore.FieldValue.serverTimestamp()}).catch(()=>{});showToast(`✅ ${c.name} ${place.name} 도착!`);lastFencePlace=place.id}
+  else if(!place&&lastFencePlace){const pp=State.places.find(p=>p.id===lastFencePlace);const a={id:'a'+Date.now(),type:'depart',childId:cid,title:`${c.name} - ${pp?.name} 출발`,message:`${pp?.name}에서 ${ts}에 출발`,time:`오늘 ${ts}`};State.alerts.unshift(a);if(!isDemo&&db)db.collection('families').doc(State.familyId).collection('alerts').add({...a,createdAt:firebase.firestore.FieldValue.serverTimestamp()}).catch(()=>{});showToast(`🚶 ${c.name} ${pp?.name} 출발!`);lastFencePlace=null}
+}
+
+function startChildMode(cid){if(!GPS.ok()){showToast('⚠️ GPS 미지원');return}State.isChildMode=true;State.selectedChild=cid;
+document.getElementById('mainApp').classList.add('hidden');document.getElementById('childModeScreen').classList.remove('hidden');
+let cnt=0;State.trackingWatchId=GPS.start(loc=>{cnt++;document.getElementById('childGpsStatus').textContent='📡 GPS 연결됨';document.getElementById('childCoords').textContent=`위도 ${loc.lat.toFixed(6)}, 경도 ${loc.lng.toFixed(6)} (±${Math.round(loc.accuracy||0)}m)`;
+const p=GPS.fence(loc.lat,loc.lng);document.getElementById('childCurrentPlace').textContent=p?`📍 ${p.name}`:'🚶 이동중';document.getElementById('childLastUpdate').textContent=`마지막: ${fmtTime(new Date())}`;document.getElementById('childTrackingStats').textContent=`전송: ${cnt}회`;
+saveLoc(cid,loc);checkAlert(cid,loc.lat,loc.lng)});showToast('📡 위치 추적 시작!')}
+
+function stopChildMode(){GPS.stop(State.trackingWatchId);State.trackingWatchId=null;State.isChildMode=false;lastFencePlace=null;
+document.getElementById('childModeScreen').classList.add('hidden');const m=document.getElementById('mainApp');m.classList.remove('hidden');m.style.display='flex';renderCurrentTab();showToast('🛑 추적 중지')}
+
+function renderMap2(places,locs,child,h){
+  h=h||240;const all=[...places];if(locs.length)all.push(...locs);
+  if(!all.length)return `<div class="map-container" style="height:${h}px;display:flex;align-items:center;justify-content:center"><div class="empty-state"><div class="icon">🗺️</div><div>위치 데이터가 없어요</div></div></div>`;
+  const mnLa=Math.min(...all.map(p=>p.lat))-.003,mxLa=Math.max(...all.map(p=>p.lat))+.003,mnLn=Math.min(...all.map(p=>p.lng))-.003,mxLn=Math.max(...all.map(p=>p.lng))+.003;
+  const tX=ln=>((ln-mnLn)/(mxLn-mnLn))*380+10,tY=la=>((mxLa-la)/(mxLa-mnLa))*(h-20)+10;
+  let s=`<div class="map-container" style="height:${h}px"><div class="map-legend"><div class="map-legend-title">🗺️ 실시간 위치</div><div style="display:flex;gap:8px"><span>🔵 경로</span><span>📍 장소</span></div></div><svg viewBox="0 0 400 ${h}" style="width:100%;height:100%"><defs><pattern id="g" width="20" height="20" patternUnits="userSpaceOnUse"><path d="M 20 0 L 0 0 0 20" fill="none" stroke="#c8e6c8" stroke-width=".5"/></pattern><linearGradient id="rg" x1="0%" y1="0%" x2="100%"><stop offset="0%" stop-color="#60a5fa" stop-opacity=".3"/><stop offset="100%" stop-color="#3b82f6"/></linearGradient><filter id="sh"><feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity=".2"/></filter></defs><rect width="400" height="${h}" fill="url(#g)"/><line x1="0" y1="${h/2}" x2="400" y2="${h/2}" stroke="#d4d4d4" stroke-width="3" stroke-dasharray="8,4"/><line x1="200" y1="0" x2="200" y2="${h}" stroke="#d4d4d4" stroke-width="3" stroke-dasharray="8,4"/>`;
+  if(locs.length>1){const pp=locs.map((l,i)=>`${i===0?'M':'L'}${tX(l.lng).toFixed(1)},${tY(l.lat).toFixed(1)}`);s+=`<path d="${pp.join(' ')}" fill="none" stroke="url(#rg)" stroke-width="4" stroke-linecap="round"/>`;locs.forEach((l,i)=>{s+=`<circle cx="${tX(l.lng).toFixed(1)}" cy="${tY(l.lat).toFixed(1)}" r="3" fill="#3b82f6" opacity="${(.3+(i/locs.length)*.7).toFixed(2)}"/>`})}
+  places.forEach(p=>{const x=tX(p.lng).toFixed(1),y=tY(p.lat).toFixed(1),c=p.type==='home'?'#f59e0b':p.type==='school'?'#3b82f6':'#6366f1',bg=p.type==='home'?'#fef3c7':p.type==='school'?'#dbeafe':'#e0e7ff';s+=`<circle cx="${x}" cy="${y}" r="${Math.max(12,(p.radius||100)/10)}" fill="${bg}" opacity=".6" stroke="${c}" stroke-width="1.5" stroke-dasharray="4,2" filter="url(#sh)"/><text x="${x}" y="${+y+5}" text-anchor="middle" font-size="16">${PI[p.type]||'📍'}</text><text x="${x}" y="${+y+22}" text-anchor="middle" font-size="9" font-weight="600" fill="#374151">${p.name}</text>`});
+  if(child&&(child.lastLat||locs.length)){const ll=locs.length?locs[locs.length-1]:{lat:child.lastLat,lng:child.lastLng};if(ll&&ll.lat){const cx=tX(ll.lng).toFixed(1),cy=tY(ll.lat).toFixed(1),sc=child.status==='safe'?'#22c55e':child.status==='moving'?'#3b82f6':'#ef4444';s+=`<circle cx="${cx}" cy="${cy}" r="18" fill="#fff" stroke="${sc}" stroke-width="3" filter="url(#sh)"><animate attributeName="r" values="16;20;16" dur="2s" repeatCount="indefinite"/></circle><text x="${cx}" y="${+cy+6}" text-anchor="middle" font-size="18">${child.avatar||'👧'}</text>`;if(child.status==='moving')s+=`<circle cx="${cx}" cy="${cy}" r="26" fill="none" stroke="${sc}" stroke-width="1.5" opacity=".5"><animate attributeName="r" values="22;32;22" dur="2s" repeatCount="indefinite"/><animate attributeName="opacity" values=".5;0;.5" dur="2s" repeatCount="indefinite"/></circle>`}}
+  s+=`</svg></div>`;return s}
+
+// Auth
+function switchAuthTab(t){document.querySelectorAll('.auth-tab').forEach((e,i)=>e.classList.toggle('active',(t==='login'&&i===0)||(t==='register'&&i===1)));document.getElementById('loginForm').classList.toggle('hidden',t!=='login');document.getElementById('registerForm').classList.toggle('hidden',t!=='register');document.getElementById('authError').classList.remove('show')}
+function showAuthError(m){const e=document.getElementById('authError');e.textContent=m;e.classList.add('show')}
+async function handleLogin(){if(isDemo){handleDemoLogin();return}const e=document.getElementById('loginEmail').value.trim(),p=document.getElementById('loginPassword').value;if(!e||!p){showAuthError('이메일과 비밀번호를 입력');return}const b=document.getElementById('loginBtn');b.textContent='로그인 중...';b.disabled=true;try{await auth.signInWithEmailAndPassword(e,p)}catch(x){showAuthError(x.code==='auth/user-not-found'?'미등록 이메일':x.code==='auth/wrong-password'?'비밀번호 틀림':'로그인 실패')}b.textContent='로그인';b.disabled=false}
+async function handleRegister(){if(isDemo){handleDemoLogin();return}const n=document.getElementById('regName').value.trim(),e=document.getElementById('regEmail').value.trim(),p=document.getElementById('regPassword').value;if(!n||!e||!p){showAuthError('모두 입력');return}if(p.length<6){showAuthError('비밀번호 6자 이상');return}const b=document.getElementById('regBtn');b.textContent='가입 중...';b.disabled=true;try{const c=await auth.createUserWithEmailAndPassword(e,p);const f=await db.collection('families').add({name:n+'의 가족',createdBy:c.user.uid,createdAt:firebase.firestore.FieldValue.serverTimestamp(),members:[c.user.uid]});await db.collection('users').doc(c.user.uid).set({name:n,email:e,role:'parent',familyId:f.id,createdAt:firebase.firestore.FieldValue.serverTimestamp()});showToast('🎉 가입 완료!')}catch(x){showAuthError(x.code==='auth/email-already-in-use'?'이미 사용중':'가입 실패')}b.textContent='가입하기';b.disabled=false}
+function handleDemoLogin(){isDemo=true;State.user={uid:'demo',email:'demo@safekids.app',name:'데모'};State.familyId='demo';State.children=[...DEMO.children];State.places=[...DEMO.places];State.schedules=[...DEMO.schedules];State.alerts=[...DEMO.alerts];State.selectedChild='c1';showMainApp();showToast('🎮 데모 모드')}
+async function handleLogout(){if(!isDemo&&auth)await auth.signOut();Object.values(State.locationListeners).forEach(f=>f());State.locationListeners={};State.user=null;State.familyId=null;isDemo=false;showAuthScreen()}
+function initAuth(){if(isDemo){showAuthScreen();return}auth.onAuthStateChanged(async u=>{if(u){State.user={uid:u.uid,email:u.email};const d=await db.collection('users').doc(u.uid).get();if(d.exists){State.user.name=d.data().name;State.familyId=d.data().familyId;await loadFamily()}showMainApp()}else showAuthScreen()})}
+
+async function loadFamily(){if(isDemo||!State.familyId)return;try{const cs=await db.collection('families').doc(State.familyId).collection('children').orderBy('createdAt').get();State.children=cs.docs.map(d=>({id:d.id,...d.data()}));const ps=await db.collection('families').doc(State.familyId).collection('places').get();State.places=ps.docs.map(d=>({id:d.id,...d.data()}));const ss=await db.collection('families').doc(State.familyId).collection('schedules').get();State.schedules=ss.docs.map(d=>({id:d.id,...d.data()}));const t=new Date();t.setHours(0,0,0,0);const as=await db.collection('families').doc(State.familyId).collection('alerts').where('createdAt','>=',t).orderBy('createdAt','desc').limit(20).get();State.alerts=as.docs.map(d=>({id:d.id,...d.data()}));if(State.children.length&&!State.selectedChild)State.selectedChild=State.children[0].id;State.children.forEach(c=>listenChild(c.id))}catch(e){console.error(e)}}
+
+async function saveChild(c){if(isDemo){if(!c.id){c.id='c'+Date.now();State.children.push(c)}else{const i=State.children.findIndex(x=>x.id===c.id);if(i>=0)State.children[i]=c}return c}const r=db.collection('families').doc(State.familyId).collection('children');if(c.id)await r.doc(c.id).update(c);else{const d=await r.add({...c,createdAt:firebase.firestore.FieldValue.serverTimestamp()});c.id=d.id;State.children.push(c);listenChild(c.id)}return c}
+async function delChild(id){if(isDemo){State.children=State.children.filter(c=>c.id!==id);return}await db.collection('families').doc(State.familyId).collection('children').doc(id).delete();if(State.locationListeners[id])State.locationListeners[id]();State.children=State.children.filter(c=>c.id!==id)}
+async function savePlace(p){if(isDemo){if(!p.id){p.id='p'+Date.now();State.places.push(p)}return p}const r=db.collection('families').doc(State.familyId).collection('places');if(p.id)await r.doc(p.id).update(p);else{const d=await r.add({...p,createdAt:firebase.firestore.FieldValue.serverTimestamp()});p.id=d.id;State.places.push(p)}return p}
+async function delPlace(id){if(isDemo){State.places=State.places.filter(p=>p.id!==id);renderTab();return}await db.collection('families').doc(State.familyId).collection('places').doc(id).delete();State.places=State.places.filter(p=>p.id!==id);renderTab()}
+async function saveSched(s){if(isDemo){if(!s.id){s.id='s'+Date.now();State.schedules.push(s)}return s}const r=db.collection('families').doc(State.familyId).collection('schedules');if(s.id)await r.doc(s.id).update(s);else{const d=await r.add({...s,createdAt:firebase.firestore.FieldValue.serverTimestamp()});s.id=d.id;State.schedules.push(s)}return s}
+async function delSched(id){if(isDemo){State.schedules=State.schedules.filter(s=>s.id!==id);renderTab();return}await db.collection('families').doc(State.familyId).collection('schedules').doc(id).delete();State.schedules=State.schedules.filter(s=>s.id!==id);renderTab()}
+function dismissAlert(id){State.alerts=State.alerts.filter(a=>a.id!==id);renderTab()}
+
+// UI
+function showAuthScreen(){document.getElementById('loadingScreen').classList.add('hidden');document.getElementById('authScreen').classList.remove('hidden');document.getElementById('mainApp').classList.add('hidden')}
+function showMainApp(){document.getElementById('loadingScreen').classList.add('hidden');document.getElementById('authScreen').classList.add('hidden');const m=document.getElementById('mainApp');m.classList.remove('hidden');m.style.display='flex';document.getElementById('userEmail').textContent=State.user?.email||'';updateClock();renderChildSelector();renderTab();startClock()}
+let clk;function updateClock(){const n=new Date();document.getElementById('headerClock').textContent=`${n.getHours().toString().padStart(2,'0')}:${n.getMinutes().toString().padStart(2,'0')}`;document.getElementById('headerDate').textContent=`${n.getFullYear()}.${(n.getMonth()+1).toString().padStart(2,'0')}.${n.getDate().toString().padStart(2,'0')} ${DN[n.getDay()]}요일`}
+function startClock(){if(clk)clearInterval(clk);clk=setInterval(updateClock,30000)}
+function renderChildSelector(){const el=document.getElementById('childSelector');if(!State.children.length){el.innerHTML='<div style="font-size:13px;opacity:.7;padding:8px">자녀를 등록해주세요</div>';return}el.innerHTML=State.children.map(c=>{const sc=c.status==='safe'?'var(--success)':c.status==='moving'?'var(--primary-bright)':c.status==='late'?'var(--danger)':'var(--text-light)';return `<div class="child-chip ${State.selectedChild===c.id?'active':''}" onclick="selectChild('${c.id}')"><span style="font-size:20px">${c.avatar}</span><span>${c.name}</span><span class="dot" style="background:${sc}"></span></div>`}).join('')}
+function selectChild(id){State.selectedChild=id;renderChildSelector();loadLocs(id).then(()=>renderTab())}
+function switchTab(t){State.currentTab=t;document.querySelectorAll('.tab-item').forEach(e=>e.classList.toggle('active',e.dataset.tab===t));if(t==='map')loadLocs(State.selectedChild).then(()=>renderTab());else renderTab()}
+function renderTab(){const a=document.getElementById('contentArea');switch(State.currentTab){case'home':a.innerHTML=renderHome();break;case'map':a.innerHTML=renderMapTab();break;case'places':a.innerHTML=renderPlaces();break;case'settings':a.innerHTML=renderSettings();break}}
+
+function renderHome(){
+  const c=State.children.find(x=>x.id===State.selectedChild);
+  if(!c)return '<div class="card"><div class="empty-state"><div class="icon">👶</div><div>설정에서 자녀를 등록하세요</div><button class="btn btn-primary btn-sm" style="margin-top:14px" onclick="switchTab(\'settings\')">설정으로</button></div></div>';
+  const now=new Date(),ca=State.alerts.filter(a=>a.childId===c.id),cs=State.schedules.filter(s=>s.childId===c.id);
+  const locs=isDemo?(DEMO.locations[c.id]||[]):State.locations;
+  const lu=c.lastUpdate?timeSince(c.lastUpdate):'없음';
+  return `
+  <div class="card" style="padding:14px;background:linear-gradient(135deg,#f0f9ff,#dbeafe);border:2px solid #93c5fd"><div style="display:flex;align-items:center;gap:12px"><span style="font-size:32px">📡</span><div style="flex:1"><div style="font-weight:800;font-size:15px;color:var(--primary)">아이 폰에서 위치 추적</div><div style="font-size:12px;color:var(--text-sub);margin-top:2px">이 버튼은 아이 폰에서 눌러주세요</div></div><button class="btn btn-success btn-sm" onclick="openChildModeSelector()">시작</button></div></div>
+  <div class="card"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><div><div style="font-size:22px;font-weight:900">${c.avatar} ${c.name}</div><div style="font-size:13px;color:var(--text-sub);margin-top:2px">${c.grade} • ${fmtTime(now)} 기준</div></div><div class="status-badge ${c.status}"><span class="dot"></span>${SL[c.status]||'미확인'}</div></div><div style="background:var(--bg);border-radius:12px;padding:10px 14px;font-size:13px;color:var(--text-sub)">📍 현재: <strong style="color:var(--text)">${c.currentPlace||'미확인'}</strong><span style="float:right;font-size:11px">${c.lastLat?'🛰️GPS':'📵미수신'} • ${lu}</span></div></div>
+  <div class="card" style="padding:0;overflow:hidden"><div style="padding:14px 18px 0"><div class="card-title">🗺️ 실시간 위치</div></div><div style="padding:0 10px 10px">${renderMap2(State.places,locs,c,240)}</div></div>
+  <div class="card"><div class="card-title">🔔 알림 <span class="count">(${ca.length})</span></div>${ca.length===0?'<div class="empty-state"><div class="icon">😊</div><div>알림 없음</div></div>':ca.map(a=>`<div class="alert-item ${a.type}"><span style="font-size:28px;flex-shrink:0">${AI[a.type]||'🔔'}</span><div style="flex:1"><div style="font-weight:700;font-size:14px">${a.title}</div><div style="font-size:12px;color:var(--text-sub);margin-top:2px">${a.message}</div><div style="font-size:11px;color:var(--text-light);margin-top:4px">${a.time}</div></div><button style="background:none;border:none;font-size:18px;cursor:pointer;color:var(--text-light);padding:4px" onclick="dismissAlert('${a.id}')">✕</button></div>`).join('')}</div>
+  <div class="card"><div class="card-title">📅 오늘 일정</div>${cs.length===0?'<div class="empty-state"><div class="icon">📅</div><div>일정 없음</div></div>':cs.map(s=>renderSchedItem(s,now)).join('')}</div>`}
+
+function renderSchedItem(s,now){const p=State.places.find(x=>x.id===s.placeId),nm=now.getHours()*60+now.getMinutes(),am=s.arriveBy?tmMin(s.arriveBy):null,lm=s.leaveAfter?tmMin(s.leaveAfter):null;let sl='예정',bg='var(--bg)',sc='var(--text-light)';if(lm&&nm>lm){sl='완료';bg='rgba(46,204,113,.15)';sc='var(--success)'}else if(am&&nm>am+10){sl='도착완료';bg='rgba(46,204,113,.15)';sc='var(--success)'}else if(am&&nm>=am-5){sl='지금!';bg='rgba(243,156,18,.15)';sc='var(--warning)'}const ds=(s.days||[]).map(d=>DN[d]).join(',');return `<div class="schedule-item"><span style="font-size:24px">${p?PI[p.type]||'📍':'📍'}</span><div style="flex:1"><div style="font-weight:700;font-size:14px">${s.label}</div><div style="font-size:12px;color:var(--text-sub);margin-top:2px">${p?.name||''} • ${ds}<br>${s.arriveBy?'도착 '+s.arriveBy:''}${s.arriveBy&&s.leaveAfter?' → ':''}${s.leaveAfter?'출발 '+s.leaveAfter:''}</div></div><span style="padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;background:${bg};color:${sc}">${sl}</span></div>`}
+
+function renderMapTab(){const c=State.children.find(x=>x.id===State.selectedChild),locs=isDemo?(DEMO.locations[State.selectedChild]||[]):State.locations;return `<div class="card"><div class="card-title">🗺️ ${c?c.name+'의':''} 이동 경로</div>${renderMap2(State.places,locs,c,300)}</div><div class="card"><div class="card-title">📋 이동 기록 <span class="count">(${locs.length}건)</span></div>${locs.length===0?'<div class="empty-state"><div class="icon">📋</div><div>GPS 추적 시작 후 표시됩니다</div></div>':[...locs].reverse().map(l=>`<div class="route-item"><div class="route-dot ${l.place?'place':'moving'}">${l.place?'📍':'🚶'}</div><div style="flex:1"><div style="font-weight:600;font-size:14px">${l.place||'이동중'}</div><div style="font-size:12px;color:var(--text-light)">위도 ${l.lat.toFixed(4)}, 경도 ${l.lng.toFixed(4)}</div></div><div style="font-size:13px;font-weight:600;color:var(--text-sub)">${fmtTime(new Date(l.time))}</div></div>`).join('')}</div>`}
+
+function renderPlaces(){const cs=State.schedules.filter(s=>s.childId===State.selectedChild);return `<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px"><div class="card-title" style="margin-bottom:0">📍 등록 장소</div><button class="fab" onclick="openAddPlaceModal()">+</button></div>${State.places.length===0?'<div class="empty-state"><div class="icon">📍</div><div>장소 없음</div></div>':State.places.map(p=>`<div class="place-item"><span style="font-size:28px">${PI[p.type]||'📍'}</span><div style="flex:1"><div style="font-weight:700;font-size:15px">${p.name}</div><div style="font-size:12px;color:var(--text-light);margin-top:2px">반경 ${p.radius||100}m • ${(p.lat||0).toFixed(4)}, ${(p.lng||0).toFixed(4)}</div></div><button class="delete-btn" onclick="delPlace('${p.id}')">🗑️</button></div>`).join('')}</div>
+  <div class="card"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px"><div class="card-title" style="margin-bottom:0">⏰ 일정</div><button class="fab" onclick="openAddSchedModal()">+</button></div>${cs.length===0?'<div class="empty-state"><div class="icon">⏰</div><div>일정 없음</div></div>':cs.map(s=>{const p=State.places.find(x=>x.id===s.placeId),ds=(s.days||[]).map(d=>DN[d]).join(',');return `<div class="place-item"><span style="font-size:24px">${p?PI[p.type]||'📍':'📍'}</span><div style="flex:1"><div style="font-weight:700;font-size:14px">${s.label}</div><div style="font-size:12px;color:var(--text-light);margin-top:2px">${p?.name||''} • ${ds}<br>${s.arriveBy?'도착 '+s.arriveBy:''} ${s.leaveAfter?'출발 '+s.leaveAfter:''}</div></div><button class="delete-btn" onclick="delSched('${s.id}')">🗑️</button></div>`}).join('')}</div>`}
+
+function renderSettings(){const s=State.settings;return `<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px"><div class="card-title" style="margin-bottom:0">👨‍👩‍👧‍👦 자녀</div><button class="fab" onclick="openAddChildModal()">+</button></div>${State.children.length===0?'<div class="empty-state"><div class="icon">👶</div><div>자녀 등록</div></div>':State.children.map(c=>`<div style="display:flex;align-items:center;gap:14px;padding:14px 0;border-bottom:1px solid var(--border)"><div style="width:44px;height:44px;border-radius:50%;background:rgba(74,144,217,.1);display:flex;align-items:center;justify-content:center;font-size:22px">${c.avatar}</div><div style="flex:1"><div style="font-weight:800;font-size:16px">${c.name}</div><div style="font-size:13px;color:var(--text-sub)">${c.grade||''}</div></div><div class="status-badge ${c.status}"><span class="dot"></span>${SL[c.status]}</div><button class="delete-btn" onclick="hdDelChild('${c.id}')">🗑️</button></div>`).join('')}</div>
+  <div class="card"><div class="card-title">🔔 알림 설정</div>${tog('arriveAlert','도착 알림','등록 장소 도착',s.arriveAlert)}${tog('departAlert','출발 알림','등록 장소 출발',s.departAlert)}${tog('lateWarning','지연 경고','시간 초과',s.lateWarning)}${tog('routeDeviation','경로 이탈','평소 경로 이탈',s.routeDeviation)}${tog('batteryAlert','배터리 부족','20% 이하',s.batteryAlert)}</div>
+  <div class="card"><div class="card-title">👪 가족 공유</div><div style="font-size:13px;color:var(--text-sub);margin-bottom:14px">보호자 초대하여 함께 확인</div><div style="display:flex;align-items:center;gap:12px;padding:12px 0"><div style="width:44px;height:44px;border-radius:50%;background:rgba(74,144,217,.1);display:flex;align-items:center;justify-content:center;font-size:22px">👤</div><div style="flex:1"><div style="font-weight:600;font-size:14px">${State.user?.name||State.user?.email||'나'}</div><span class="role-badge parent">관리자</span></div></div><button class="btn btn-secondary" style="margin-top:12px" onclick="showToast('👪 곧 추가됩니다')">+ 보호자 초대</button></div>
+  <div class="card"><div class="card-title">🔥 시스템</div><div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)"><span style="font-size:24px">${isDemo?'🎮':'✅'}</span><div><div style="font-weight:700">${isDemo?'데모':'Firebase 연결됨'}</div><div style="font-size:12px;color:var(--text-light)">${isDemo?'Firebase 설정 필요':'자동 저장중'}</div></div></div><div style="display:flex;align-items:center;gap:10px;padding:8px 0"><span style="font-size:24px">${GPS.ok()?'📡':'❌'}</span><div><div style="font-weight:700">GPS ${GPS.ok()?'지원':'미지원'}</div><div style="font-size:12px;color:var(--text-light)">${GPS.ok()?'추적 가능':'GPS 미지원 기기'}</div></div></div></div>
+  <div class="card" style="text-align:center;color:var(--text-light);font-size:12px">SafeKids v2.0 • GPS 추적 완료<br>다음: 카카오맵 → 푸시 알림</div>`}
+
+function tog(k,l,d,v){return `<div class="setting-item"><div><div style="font-weight:600;font-size:14px">${l}</div><div style="font-size:12px;color:var(--text-light)">${d}</div></div><div class="toggle ${v?'on':'off'}" onclick="tgl('${k}')"><div class="knob"></div></div></div>`}
+function tgl(k){State.settings[k]=!State.settings[k];renderTab()}
+
+// Modals
+function openModal(h){const o=document.createElement('div');o.className='modal-overlay';o.onclick=e=>{if(e.target===o)closeModal()};o.innerHTML=`<div class="modal-content">${h}</div>`;document.getElementById('app').appendChild(o)}
+function closeModal(){const o=document.querySelector('.modal-overlay');if(o)o.remove()}
+
+function openChildModeSelector(){if(!State.children.length){showToast('⚠️ 먼저 자녀 등록');return}openModal(`<div class="modal-title">📡 위치 추적 시작</div><div style="font-size:14px;color:var(--text-sub);margin-bottom:16px">아이 폰에서 추적할 자녀 선택<br>선택 즉시 GPS 추적 시작!</div>${State.children.map(c=>`<div style="display:flex;align-items:center;gap:14px;padding:14px;background:var(--bg);border-radius:12px;margin-bottom:8px;cursor:pointer" onclick="closeModal();startChildMode('${c.id}')"><span style="font-size:36px">${c.avatar}</span><div style="flex:1"><div style="font-weight:800;font-size:16px">${c.name}</div><div style="font-size:13px;color:var(--text-sub)">${c.grade}</div></div><span style="font-size:24px">▶️</span></div>`).join('')}<div class="modal-actions"><button class="btn btn-secondary" onclick="closeModal()">취소</button></div>`)}
+
+function openAddChildModal(){openModal(`<div class="modal-title">👶 자녀 추가</div><div class="form-group"><label class="form-label">이름</label><input type="text" id="mcName" class="form-input" placeholder="이름"></div><div class="form-group"><label class="form-label">아바타</label><div style="display:flex;gap:8px" id="avSel">${['👧','👦','👶','🧒'].map((a,i)=>`<button onclick="selAv('${a}')" class="btn ${i===0?'btn-primary':'btn-secondary'}" style="width:52px;height:52px;font-size:28px;padding:0" data-avatar="${a}">${a}</button>`).join('')}</div></div><div class="form-group"><label class="form-label">학년</label><input type="text" id="mcGrade" class="form-input" placeholder="예: 초3"></div><div class="modal-actions"><button class="btn btn-secondary" onclick="closeModal()">취소</button><button class="btn btn-primary" onclick="hdAddChild()">추가</button></div>`);window._av='👧'}
+function selAv(a){window._av=a;document.querySelectorAll('#avSel button').forEach(b=>{b.className=b.dataset.avatar===a?'btn btn-primary':'btn btn-secondary';b.style.cssText='width:52px;height:52px;font-size:28px;padding:0'})}
+async function hdAddChild(){const n=document.getElementById('mcName').value.trim(),g=document.getElementById('mcGrade').value.trim();if(!n){showToast('⚠️ 이름 입력');return}const c=await saveChild({name:n,avatar:window._av||'👧',grade:g,status:'unknown',currentPlace:'미확인',lastLat:null,lastLng:null,lastUpdate:null});if(!State.selectedChild)State.selectedChild=c.id;closeModal();renderChildSelector();renderTab();showToast(`✅ ${n} 추가!`)}
+async function hdDelChild(id){const c=State.children.find(x=>x.id===id);if(!confirm(`${c?.name} 삭제?`))return;await delChild(id);if(State.selectedChild===id)State.selectedChild=State.children[0]?.id||null;renderChildSelector();renderTab();showToast('🗑️ 삭제')}
+
+function openAddPlaceModal(){openModal(`<div class="modal-title">📍 새 장소</div><div class="form-group"><label class="form-label">이름</label><input type="text" id="mpName" class="form-input" placeholder="태권도장"></div><div class="form-group"><label class="form-label">유형</label><div style="display:flex;gap:6px" id="ptSel">${[['home','🏠 집'],['school','🏫 학교'],['academy','📚 학원'],['other','📍 기타']].map(([t,l],i)=>`<button onclick="selPT('${t}')" class="btn ${i===0?'btn-primary':'btn-secondary'} btn-sm" style="flex:1;font-size:12px" data-type="${t}">${l}</button>`).join('')}</div></div><div class="form-group"><label class="form-label">위도 / 경도</label><div style="display:flex;gap:8px"><input type="number" step="any" id="mpLat" class="form-input" placeholder="위도"><input type="number" step="any" id="mpLng" class="form-input" placeholder="경도"></div><button class="btn btn-secondary btn-sm" style="margin-top:8px" onclick="fillLoc()">📍 현재 위치 자동입력</button><div style="font-size:11px;color:var(--text-light);margin-top:6px">💡 현재 위치 버튼 또는 카카오맵에서 좌표 복사</div></div><div class="form-group"><label class="form-label">반경(m)</label><input type="number" id="mpRad" class="form-input" value="100"></div><div class="modal-actions"><button class="btn btn-secondary" onclick="closeModal()">취소</button><button class="btn btn-primary" onclick="hdAddPlace()">등록</button></div>`);window._pt='home'}
+function selPT(t){window._pt=t;document.querySelectorAll('#ptSel button').forEach(b=>{b.className=`btn ${b.dataset.type===t?'btn-primary':'btn-secondary'} btn-sm`;b.style.cssText='flex:1;font-size:12px'})}
+async function fillLoc(){try{showToast('📍 위치 확인중...');const p=await GPS.getPos();document.getElementById('mpLat').value=p.lat.toFixed(6);document.getElementById('mpLng').value=p.lng.toFixed(6);showToast(`✅ 입력 완료 (±${Math.round(p.accuracy)}m)`)}catch(e){showToast('⚠️ 위치 확인 실패')}}
+async function hdAddPlace(){const n=document.getElementById('mpName').value.trim();if(!n){showToast('⚠️ 이름 입력');return}await savePlace({name:n,type:window._pt||'other',lat:parseFloat(document.getElementById('mpLat').value)||37.495,lng:parseFloat(document.getElementById('mpLng').value)||126.49,radius:parseInt(document.getElementById('mpRad').value)||100});closeModal();renderTab();showToast(`✅ ${n} 등록!`)}
+
+function openAddSchedModal(){if(!State.selectedChild){showToast('⚠️ 자녀 선택');return}if(!State.places.length){showToast('⚠️ 장소 먼저 등록');return}openModal(`<div class="modal-title">⏰ 새 일정</div><div class="form-group"><label class="form-label">이름</label><input type="text" id="msLabel" class="form-input" placeholder="태권도"></div><div class="form-group"><label class="form-label">장소</label><select id="msPlace" class="form-input"><option value="">선택</option>${State.places.map(p=>`<option value="${p.id}">${PI[p.type]||'📍'} ${p.name}</option>`).join('')}</select></div><div style="display:flex;gap:8px"><div class="form-group" style="flex:1"><label class="form-label">도착</label><input type="time" id="msArr" class="form-input"></div><div class="form-group" style="flex:1"><label class="form-label">출발</label><input type="time" id="msLev" class="form-input"></div></div><div class="form-group"><label class="form-label">반복</label><div class="day-selector" id="dSel">${DN.map((d,i)=>`<button class="day-btn ${[1,2,3,4,5].includes(i)?'active':'inactive'}" onclick="togDay(${i})" data-day="${i}">${d}</button>`).join('')}</div></div><div class="modal-actions"><button class="btn btn-secondary" onclick="closeModal()">취소</button><button class="btn btn-primary" onclick="hdAddSched()">등록</button></div>`);window._days=[1,2,3,4,5]}
+function togDay(d){if(!window._days)window._days=[1,2,3,4,5];const i=window._days.indexOf(d);if(i>=0)window._days.splice(i,1);else window._days.push(d);document.querySelectorAll('#dSel .day-btn').forEach(b=>{const x=parseInt(b.dataset.day);b.className=`day-btn ${window._days.includes(x)?'active':'inactive'}`})}
+async function hdAddSched(){const l=document.getElementById('msLabel').value.trim(),p=document.getElementById('msPlace').value;if(!l||!p){showToast('⚠️ 이름과 장소');return}await saveSched({label:l,placeId:p,childId:State.selectedChild,arriveBy:document.getElementById('msArr').value||null,leaveAfter:document.getElementById('msLev').value||null,days:window._days||[1,2,3,4,5]});closeModal();renderTab();showToast(`✅ ${l} 등록!`)}
+
+// Utils
+function fmtTime(d){return d.getHours().toString().padStart(2,'0')+':'+d.getMinutes().toString().padStart(2,'0')}
+function tmMin(t){if(!t)return 0;const[h,m]=t.split(':').map(Number);return h*60+m}
+function timeSince(ts){const s=Math.floor((Date.now()-ts)/1000);if(s<60)return s+'초 전';if(s<3600)return Math.floor(s/60)+'분 전';if(s<86400)return Math.floor(s/3600)+'시간 전';return Math.floor(s/86400)+'일 전'}
+function showToast(m){document.querySelectorAll('.toast').forEach(t=>t.remove());const t=document.createElement('div');t.className='toast';t.textContent=m;document.body.appendChild(t);setTimeout(()=>t.remove(),2500)}
+
+document.addEventListener('DOMContentLoaded',()=>{setTimeout(()=>{if(isDemo)showAuthScreen();else initAuth()},800)});
+</script>
+</body>
+</html>

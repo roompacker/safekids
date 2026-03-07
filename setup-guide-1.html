@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SafeKids - Firebase 설정 가이드</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Noto Sans KR', sans-serif; background: #f0f4f8; color: #1a2332; line-height: 1.7; }
+.container { max-width: 600px; margin: 0 auto; padding: 20px; }
+.hero { background: linear-gradient(135deg, #1e3a5f, #4a90d9); color: white; padding: 32px 24px; border-radius: 20px; margin-bottom: 24px; text-align: center; }
+.hero h1 { font-size: 24px; font-weight: 900; }
+.hero p { opacity: 0.8; margin-top: 8px; font-size: 14px; }
+.step { background: white; border-radius: 16px; padding: 20px; margin-bottom: 16px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
+.step-num { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; background: #4a90d9; color: white; border-radius: 50%; font-weight: 800; font-size: 14px; margin-right: 10px; }
+.step h2 { font-size: 17px; font-weight: 800; margin-bottom: 12px; display: flex; align-items: center; }
+.step p { font-size: 14px; color: #4a5568; margin-bottom: 10px; }
+.step .highlight { background: #fef3c7; padding: 2px 8px; border-radius: 4px; font-weight: 600; }
+.code-block { background: #1e293b; color: #e2e8f0; padding: 14px 16px; border-radius: 10px; font-size: 13px; font-family: 'Courier New', monospace; overflow-x: auto; margin: 10px 0; white-space: pre-wrap; word-break: break-all; }
+.code-block .comment { color: #94a3b8; }
+.warning { background: #fef2f2; border-left: 4px solid #ef4444; padding: 12px 16px; border-radius: 0 10px 10px 0; margin: 10px 0; font-size: 13px; }
+.tip { background: #f0fdf4; border-left: 4px solid #22c55e; padding: 12px 16px; border-radius: 0 10px 10px 0; margin: 10px 0; font-size: 13px; }
+.img-placeholder { background: #e2e8f0; border-radius: 10px; padding: 20px; text-align: center; color: #64748b; font-size: 13px; margin: 10px 0; }
+ol, ul { padding-left: 20px; margin: 8px 0; }
+li { margin: 6px 0; font-size: 14px; color: #4a5568; }
+.btn-link { display: inline-block; background: #4a90d9; color: white; padding: 10px 20px; border-radius: 10px; text-decoration: none; font-weight: 700; font-size: 14px; margin: 8px 0; }
+.checklist { list-style: none; padding: 0; }
+.checklist li { padding: 8px 0; border-bottom: 1px solid #f0f0f0; }
+.checklist li::before { content: '☐ '; font-size: 16px; }
+.done::before { content: '✅ ' !important; }
+.db-structure { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px; font-size: 13px; font-family: monospace; }
+</style>
+</head>
+<body>
+<div class="container">
+
+<div class="hero">
+  <div style="font-size:48px;margin-bottom:8px">🛡️🔥</div>
+  <h1>SafeKids Firebase 설정 가이드</h1>
+  <p>1단계: Firebase 프로젝트 만들고 앱에 연결하기</p>
+</div>
+
+<!-- 체크리스트 -->
+<div class="step">
+  <h2>📋 완료 체크리스트</h2>
+  <ul class="checklist">
+    <li>Firebase 프로젝트 생성</li>
+    <li>웹 앱 등록</li>
+    <li>Authentication 활성화</li>
+    <li>Firestore Database 생성</li>
+    <li>보안 규칙 설정</li>
+    <li>index.html에 설정 코드 붙여넣기</li>
+    <li>GitHub Pages에 배포</li>
+  </ul>
+</div>
+
+<!-- Step 1 -->
+<div class="step">
+  <h2><span class="step-num">1</span> Firebase 프로젝트 만들기</h2>
+  <ol>
+    <li><a href="https://console.firebase.google.com" target="_blank" class="btn-link">Firebase Console 열기 →</a></li>
+    <li>구글 계정으로 로그인</li>
+    <li><span class="highlight">프로젝트 추가</span> 버튼 클릭</li>
+    <li>프로젝트 이름: <strong>safekids</strong> 입력</li>
+    <li>Google 애널리틱스 → <strong>사용 안함</strong> (꺼도 됩니다)</li>
+    <li><span class="highlight">프로젝트 만들기</span> 클릭</li>
+    <li>잠시 기다리면 프로젝트 생성 완료!</li>
+  </ol>
+  <div class="tip">💡 RoomPacker 때처럼 Firebase Console에서 진행해요. 이미 해보셨으니 익숙하실 거예요!</div>
+</div>
+
+<!-- Step 2 -->
+<div class="step">
+  <h2><span class="step-num">2</span> 웹 앱 등록하기</h2>
+  <ol>
+    <li>프로젝트 메인 화면에서 <span class="highlight">&lt;/&gt;</span> (웹) 아이콘 클릭</li>
+    <li>앱 닉네임: <strong>SafeKids Web</strong></li>
+    <li>Firebase Hosting 체크는 ❌ 하지 마세요 (GitHub Pages 사용)</li>
+    <li><span class="highlight">앱 등록</span> 클릭</li>
+    <li>화면에 나오는 설정 코드를 <strong>복사</strong>합니다:</li>
+  </ol>
+  <div class="code-block"><span class="comment">// 이런 형태의 코드가 나옵니다:</span>
+const firebaseConfig = {
+  apiKey: "AIzaSy...........",
+  authDomain: "safekids-xxxxx.firebaseapp.com",
+  projectId: "safekids-xxxxx",
+  storageBucket: "safekids-xxxxx.appspot.com",
+  messagingSenderId: "123456789",
+  appId: "1:123456789:web:abcdef"
+};</div>
+  <div class="warning">⚠️ 이 코드를 반드시 복사해서 메모장에 저장해두세요! 나중에 index.html에 붙여넣을 거예요.</div>
+</div>
+
+<!-- Step 3 -->
+<div class="step">
+  <h2><span class="step-num">3</span> 이메일 로그인 활성화</h2>
+  <ol>
+    <li>왼쪽 메뉴에서 <span class="highlight">빌드 → Authentication</span> 클릭</li>
+    <li><span class="highlight">시작하기</span> 버튼 클릭</li>
+    <li><span class="highlight">Sign-in method</span> 탭 클릭</li>
+    <li><strong>이메일/비밀번호</strong> 클릭</li>
+    <li>첫 번째 토글 <strong>사용 설정</strong> → ON으로 변경</li>
+    <li><span class="highlight">저장</span> 클릭</li>
+  </ol>
+  <div class="tip">💡 이렇게 하면 부모님이 이메일+비밀번호로 가입/로그인할 수 있어요</div>
+</div>
+
+<!-- Step 4 -->
+<div class="step">
+  <h2><span class="step-num">4</span> Firestore Database 만들기</h2>
+  <ol>
+    <li>왼쪽 메뉴에서 <span class="highlight">빌드 → Firestore Database</span> 클릭</li>
+    <li><span class="highlight">데이터베이스 만들기</span> 클릭</li>
+    <li>위치: <strong>asia-northeast3 (서울)</strong> 선택</li>
+    <li><strong>테스트 모드에서 시작</strong> 선택 → 다음</li>
+    <li><span class="highlight">만들기</span> 클릭</li>
+  </ol>
+</div>
+
+<!-- Step 5 -->
+<div class="step">
+  <h2><span class="step-num">5</span> Firestore 보안 규칙 설정</h2>
+  <p>Firestore Database 화면에서 <span class="highlight">규칙</span> 탭을 클릭하고, 아래 규칙으로 교체하세요:</p>
+  <div class="code-block">rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    <span class="comment">// 사용자 프로필: 본인만 읽기/쓰기</span>
+    match /users/{userId} {
+      allow read, write: if request.auth != null 
+        && request.auth.uid == userId;
+    }
+    
+    <span class="comment">// 가족 그룹: 멤버만 접근</span>
+    match /families/{familyId} {
+      allow read, write: if request.auth != null
+        && request.auth.uid in resource.data.members;
+      allow create: if request.auth != null;
+      
+      <span class="comment">// 가족 하위 컬렉션 (자녀, 장소, 일정, 알림, 위치)</span>
+      match /{subcollection}/{docId} {
+        allow read, write: if request.auth != null;
+      }
+    }
+  }
+}</div>
+  <p><span class="highlight">게시</span> 버튼을 눌러 저장하세요.</p>
+  <div class="warning">⚠️ 테스트 모드 규칙은 30일 후 만료됩니다. 위 규칙으로 꼭 교체하세요!</div>
+</div>
+
+<!-- Step 6 -->
+<div class="step">
+  <h2><span class="step-num">6</span> index.html에 Firebase 설정 넣기</h2>
+  <p>index.html 파일을 열어서, 상단에 있는 이 부분을 찾으세요:</p>
+  <div class="code-block"><span class="comment">// 🔥 Firebase 설정 - 여기에 본인의 Firebase 설정을 넣으세요!</span>
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT.firebaseapp.com",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_PROJECT.appspot.com",
+  messagingSenderId: "YOUR_SENDER_ID",
+  appId: "YOUR_APP_ID"
+};</div>
+  <p>↓ 2단계에서 복사한 <strong>실제 Firebase 설정값</strong>으로 바꿔주세요:</p>
+  <div class="code-block"><span class="comment">// 예시 (본인 값으로 교체!)</span>
+const firebaseConfig = {
+  apiKey: "AIzaSyBxxxxxxxxxxxxxx",
+  authDomain: "safekids-12345.firebaseapp.com",
+  projectId: "safekids-12345",
+  storageBucket: "safekids-12345.appspot.com",
+  messagingSenderId: "987654321",
+  appId: "1:987654321:web:abc123"
+};</div>
+</div>
+
+<!-- Step 7 -->
+<div class="step">
+  <h2><span class="step-num">7</span> GitHub Pages에 배포하기</h2>
+  <p>RoomPacker처럼 GitHub에 올려서 배포합니다:</p>
+  <ol>
+    <li>GitHub에서 <strong>새 저장소(Repository)</strong> 만들기
+      <br>→ 이름: <strong>safekids</strong></li>
+    <li>Settings → Pages → Source를 <strong>main</strong> 브랜치로 설정</li>
+    <li>아래 파일들을 업로드:
+      <ul>
+        <li><strong>index.html</strong> (메인 앱)</li>
+        <li><strong>manifest.json</strong> (PWA 설정)</li>
+        <li><strong>setup-guide.html</strong> (이 가이드)</li>
+      </ul>
+    </li>
+    <li>1~2분 후 <strong>https://[아이디].github.io/safekids/</strong> 에서 접속 가능!</li>
+  </ol>
+  <div class="tip">💡 RoomPacker 올릴 때랑 동일한 방법이에요!</div>
+</div>
+
+<!-- DB 구조 -->
+<div class="step">
+  <h2>📊 Firestore 데이터 구조</h2>
+  <p>앱에서 자동으로 아래 구조로 데이터가 저장됩니다:</p>
+  <div class="db-structure">
+📁 users/{userId}
+   ├─ name: "홍길동"
+   ├─ email: "hong@email.com"
+   ├─ role: "parent"
+   └─ familyId: "가족ID"
+
+📁 families/{familyId}
+   ├─ name: "홍길동의 가족"
+   ├─ members: [userId1, userId2]
+   │
+   ├─ 📁 children/{childId}
+   │   ├─ name: "지우"
+   │   ├─ avatar: "👧"
+   │   ├─ grade: "초3"
+   │   ├─ status: "safe"
+   │   └─ currentPlace: "영종초등학교"
+   │
+   ├─ 📁 places/{placeId}
+   │   ├─ name: "영종초등학교"
+   │   ├─ type: "school"
+   │   ├─ lat: 37.4932
+   │   ├─ lng: 126.4928
+   │   └─ radius: 150
+   │
+   ├─ 📁 schedules/{scheduleId}
+   │   ├─ label: "등교"
+   │   ├─ placeId: "장소ID"
+   │   ├─ childId: "자녀ID"
+   │   ├─ arriveBy: "08:30"
+   │   ├─ leaveAfter: "14:30"
+   │   └─ days: [1,2,3,4,5]
+   │
+   ├─ 📁 alerts/{alertId}
+   │   ├─ type: "arrive"
+   │   ├─ childId: "자녀ID"
+   │   ├─ title: "지우 - 학교 도착"
+   │   ├─ message: "08:25에 도착"
+   │   └─ createdAt: Timestamp
+   │
+   └─ 📁 locations/{locationId}  ← (2단계에서 추가)
+       ├─ childId: "자녀ID"
+       ├─ lat: 37.4950
+       ├─ lng: 126.4200
+       └─ timestamp: Timestamp
+  </div>
+</div>
+
+<!-- 다음 단계 -->
+<div class="step" style="background:linear-gradient(135deg,#f0fdf4,#dcfce7);border:2px solid #22c55e">
+  <h2>✅ 1단계 완료 후 할 수 있는 것</h2>
+  <ul>
+    <li>✅ 부모 회원가입 / 로그인</li>
+    <li>✅ 자녀 추가 / 관리</li>
+    <li>✅ 장소 등록 (집, 학교, 학원)</li>
+    <li>✅ 일정 등록 (도착시간, 출발시간, 반복요일)</li>
+    <li>✅ 모든 데이터가 Firebase에 자동 저장</li>
+    <li>✅ 다른 기기에서 로그인해도 데이터 유지</li>
+  </ul>
+  <h2 style="margin-top:20px">⏭️ 다음 단계: GPS 위치 추적</h2>
+  <ul>
+    <li>아이 폰에서 위치를 수집하는 기능</li>
+    <li>부모 폰에서 실시간 확인하는 기능</li>
+    <li>Geofencing (장소 도착/출발 자동 감지)</li>
+  </ul>
+</div>
+
+<div style="text-align:center;padding:20px;color:#94a3b8;font-size:12px">
+  SafeKids v1.0 - Firebase 연동 가이드<br>
+  문제가 있으면 Claude에게 물어보세요! 🛡️
+</div>
+
+</div>
+</body>
+</html>
