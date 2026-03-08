@@ -169,6 +169,7 @@ html,body{height:100%;overflow:hidden;font-family:'Noto Sans KR',sans-serif;back
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=978843ebeec6883898f105e0dbc70f03&autoload=false"></script>
 <script>
 const firebaseConfig={apiKey:"AIzaSyDsLw-L6kG3XCUjbZJRcup_Eh6c_iQXjzM",authDomain:"safekids-220ff.firebaseapp.com",projectId:"safekids-220ff",storageBucket:"safekids-220ff.firebasestorage.app",messagingSenderId:"421257265182",appId:"1:421257265182:web:8f4d6d1b2da3a807442e0f"};
 let app,auth,db,isDemo=false;
@@ -222,16 +223,43 @@ saveLoc(cid,loc);checkAlert(cid,loc.lat,loc.lng)});showToast('📡 위치 추적
 function stopChildMode(){GPS.stop(State.trackingWatchId);State.trackingWatchId=null;State.isChildMode=false;lastFencePlace=null;
 document.getElementById('childModeScreen').classList.add('hidden');const m=document.getElementById('mainApp');m.classList.remove('hidden');m.style.display='flex';renderCurrentTab();showToast('🛑 추적 중지')}
 
+let kakaoReady=false,kakaoMap=null,kakaoMarkers=[],kakaoPolyline=null,kakaoCircles=[];
+kakao.maps.load(()=>{kakaoReady=true;console.log('카카오맵 로드 완료')});
+
 function renderMap2(places,locs,child,h){
   h=h||240;const all=[...places];if(locs.length)all.push(...locs);
   if(!all.length)return `<div class="map-container" style="height:${h}px;display:flex;align-items:center;justify-content:center"><div class="empty-state"><div class="icon">🗺️</div><div>위치 데이터가 없어요</div></div></div>`;
-  const mnLa=Math.min(...all.map(p=>p.lat))-.003,mxLa=Math.max(...all.map(p=>p.lat))+.003,mnLn=Math.min(...all.map(p=>p.lng))-.003,mxLn=Math.max(...all.map(p=>p.lng))+.003;
-  const tX=ln=>((ln-mnLn)/(mxLn-mnLn))*380+10,tY=la=>((mxLa-la)/(mxLa-mnLa))*(h-20)+10;
-  let s=`<div class="map-container" style="height:${h}px"><div class="map-legend"><div class="map-legend-title">🗺️ 실시간 위치</div><div style="display:flex;gap:8px"><span>🔵 경로</span><span>📍 장소</span></div></div><svg viewBox="0 0 400 ${h}" style="width:100%;height:100%"><defs><pattern id="g" width="20" height="20" patternUnits="userSpaceOnUse"><path d="M 20 0 L 0 0 0 20" fill="none" stroke="#c8e6c8" stroke-width=".5"/></pattern><linearGradient id="rg" x1="0%" y1="0%" x2="100%"><stop offset="0%" stop-color="#60a5fa" stop-opacity=".3"/><stop offset="100%" stop-color="#3b82f6"/></linearGradient><filter id="sh"><feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity=".2"/></filter></defs><rect width="400" height="${h}" fill="url(#g)"/><line x1="0" y1="${h/2}" x2="400" y2="${h/2}" stroke="#d4d4d4" stroke-width="3" stroke-dasharray="8,4"/><line x1="200" y1="0" x2="200" y2="${h}" stroke="#d4d4d4" stroke-width="3" stroke-dasharray="8,4"/>`;
-  if(locs.length>1){const pp=locs.map((l,i)=>`${i===0?'M':'L'}${tX(l.lng).toFixed(1)},${tY(l.lat).toFixed(1)}`);s+=`<path d="${pp.join(' ')}" fill="none" stroke="url(#rg)" stroke-width="4" stroke-linecap="round"/>`;locs.forEach((l,i)=>{s+=`<circle cx="${tX(l.lng).toFixed(1)}" cy="${tY(l.lat).toFixed(1)}" r="3" fill="#3b82f6" opacity="${(.3+(i/locs.length)*.7).toFixed(2)}"/>`})}
-  places.forEach(p=>{const x=tX(p.lng).toFixed(1),y=tY(p.lat).toFixed(1),c=p.type==='home'?'#f59e0b':p.type==='school'?'#3b82f6':'#6366f1',bg=p.type==='home'?'#fef3c7':p.type==='school'?'#dbeafe':'#e0e7ff';s+=`<circle cx="${x}" cy="${y}" r="${Math.max(12,(p.radius||100)/10)}" fill="${bg}" opacity=".6" stroke="${c}" stroke-width="1.5" stroke-dasharray="4,2" filter="url(#sh)"/><text x="${x}" y="${+y+5}" text-anchor="middle" font-size="16">${PI[p.type]||'📍'}</text><text x="${x}" y="${+y+22}" text-anchor="middle" font-size="9" font-weight="600" fill="#374151">${p.name}</text>`});
-  if(child&&(child.lastLat||locs.length)){const ll=locs.length?locs[locs.length-1]:{lat:child.lastLat,lng:child.lastLng};if(ll&&ll.lat){const cx=tX(ll.lng).toFixed(1),cy=tY(ll.lat).toFixed(1),sc=child.status==='safe'?'#22c55e':child.status==='moving'?'#3b82f6':'#ef4444';s+=`<circle cx="${cx}" cy="${cy}" r="18" fill="#fff" stroke="${sc}" stroke-width="3" filter="url(#sh)"><animate attributeName="r" values="16;20;16" dur="2s" repeatCount="indefinite"/></circle><text x="${cx}" y="${+cy+6}" text-anchor="middle" font-size="18">${child.avatar||'👧'}</text>`;if(child.status==='moving')s+=`<circle cx="${cx}" cy="${cy}" r="26" fill="none" stroke="${sc}" stroke-width="1.5" opacity=".5"><animate attributeName="r" values="22;32;22" dur="2s" repeatCount="indefinite"/><animate attributeName="opacity" values=".5;0;.5" dur="2s" repeatCount="indefinite"/></circle>`}}
-  s+=`</svg></div>`;return s}
+  const mapId='kakaoMap'+Date.now();
+  setTimeout(()=>initKMap(mapId,places,locs,child),100);
+  return `<div id="${mapId}" style="width:100%;height:${h}px;border-radius:14px;overflow:hidden"></div>`}
+
+function initKMap(id,places,locs,child){
+  const el=document.getElementById(id);if(!el||!kakaoReady)return;
+  // 중심 좌표 계산
+  const all=[...places];if(locs.length)all.push(...locs);
+  if(child&&child.lastLat)all.push({lat:child.lastLat,lng:child.lastLng});
+  let cLat=37.495,cLng=126.49;
+  if(all.length){cLat=all.reduce((s,p)=>s+p.lat,0)/all.length;cLng=all.reduce((s,p)=>s+p.lng,0)/all.length}
+  const map=new kakao.maps.Map(el,{center:new kakao.maps.LatLng(cLat,cLng),level:5});
+  // 자동 범위 조정
+  if(all.length>1){const bounds=new kakao.maps.LatLngBounds();all.forEach(p=>bounds.extend(new kakao.maps.LatLng(p.lat,p.lng)));map.setBounds(bounds,50)}
+  // 장소 마커 + 반경 원
+  places.forEach(p=>{
+    const pos=new kakao.maps.LatLng(p.lat,p.lng);
+    const icon=PI[p.type]||'📍';
+    const content=`<div style="background:white;border:2px solid ${p.type==='home'?'#f59e0b':p.type==='school'?'#3b82f6':'#6366f1'};border-radius:20px;padding:4px 10px;font-size:12px;font-weight:700;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,.15)">${icon} ${p.name}</div>`;
+    new kakao.maps.CustomOverlay({map,position:pos,content,yAnchor:1.3});
+    new kakao.maps.Circle({map,center:pos,radius:p.radius||100,strokeWeight:2,strokeColor:p.type==='home'?'#f59e0b':p.type==='school'?'#3b82f6':'#6366f1',strokeOpacity:.6,strokeStyle:'dash',fillColor:p.type==='home'?'#fef3c7':p.type==='school'?'#dbeafe':'#e0e7ff',fillOpacity:.3})});
+  // 이동 경로 폴리라인
+  if(locs.length>1){const path=locs.map(l=>new kakao.maps.LatLng(l.lat,l.lng));new kakao.maps.Polyline({map,path,strokeWeight:5,strokeColor:'#3b82f6',strokeOpacity:.8,strokeStyle:'solid'});
+    locs.forEach((l,i)=>{if(l.place){new kakao.maps.CustomOverlay({map,position:new kakao.maps.LatLng(l.lat,l.lng),content:`<div style="background:#22c55e;color:white;border-radius:12px;padding:2px 8px;font-size:10px;font-weight:600">✅ ${l.place}</div>`,yAnchor:2})}})}
+  // 아이 현재 위치
+  if(child&&(child.lastLat||locs.length)){const ll=locs.length?locs[locs.length-1]:{lat:child.lastLat,lng:child.lastLng};
+    if(ll&&ll.lat){const pos=new kakao.maps.LatLng(ll.lat,ll.lng);
+      const sc=child.status==='safe'?'#22c55e':child.status==='moving'?'#3b82f6':'#ef4444';
+      new kakao.maps.CustomOverlay({map,position:pos,content:`<div style="width:44px;height:44px;background:white;border:3px solid ${sc};border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:24px;box-shadow:0 4px 12px rgba(0,0,0,.2)">${child.avatar||'👧'}</div>`,yAnchor:.5});
+      new kakao.maps.Circle({map,center:pos,radius:30,strokeWeight:2,strokeColor:sc,strokeOpacity:.5,fillColor:sc,fillOpacity:.15})}}
+}
 
 // Auth
 function switchAuthTab(t){document.querySelectorAll('.auth-tab').forEach((e,i)=>e.classList.toggle('active',(t==='login'&&i===0)||(t==='register'&&i===1)));document.getElementById('loginForm').classList.toggle('hidden',t!=='login');document.getElementById('registerForm').classList.toggle('hidden',t!=='register');document.getElementById('authError').classList.remove('show')}
@@ -285,8 +313,8 @@ function renderPlaces(){const cs=State.schedules.filter(s=>s.childId===State.sel
 function renderSettings(){const s=State.settings;return `<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px"><div class="card-title" style="margin-bottom:0">👨‍👩‍👧‍👦 자녀</div><button class="fab" onclick="openAddChildModal()">+</button></div>${State.children.length===0?'<div class="empty-state"><div class="icon">👶</div><div>자녀 등록</div></div>':State.children.map(c=>`<div style="display:flex;align-items:center;gap:14px;padding:14px 0;border-bottom:1px solid var(--border)"><div style="width:44px;height:44px;border-radius:50%;background:rgba(74,144,217,.1);display:flex;align-items:center;justify-content:center;font-size:22px">${c.avatar}</div><div style="flex:1"><div style="font-weight:800;font-size:16px">${c.name}</div><div style="font-size:13px;color:var(--text-sub)">${c.grade||''}</div></div><div class="status-badge ${c.status}"><span class="dot"></span>${SL[c.status]}</div><button class="delete-btn" onclick="hdDelChild('${c.id}')">🗑️</button></div>`).join('')}</div>
   <div class="card"><div class="card-title">🔔 알림 설정</div>${tog('arriveAlert','도착 알림','등록 장소 도착',s.arriveAlert)}${tog('departAlert','출발 알림','등록 장소 출발',s.departAlert)}${tog('lateWarning','지연 경고','시간 초과',s.lateWarning)}${tog('routeDeviation','경로 이탈','평소 경로 이탈',s.routeDeviation)}${tog('batteryAlert','배터리 부족','20% 이하',s.batteryAlert)}</div>
   <div class="card"><div class="card-title">👪 가족 공유</div><div style="font-size:13px;color:var(--text-sub);margin-bottom:14px">보호자 초대하여 함께 확인</div><div style="display:flex;align-items:center;gap:12px;padding:12px 0"><div style="width:44px;height:44px;border-radius:50%;background:rgba(74,144,217,.1);display:flex;align-items:center;justify-content:center;font-size:22px">👤</div><div style="flex:1"><div style="font-weight:600;font-size:14px">${State.user?.name||State.user?.email||'나'}</div><span class="role-badge parent">관리자</span></div></div><button class="btn btn-secondary" style="margin-top:12px" onclick="showToast('👪 곧 추가됩니다')">+ 보호자 초대</button></div>
-  <div class="card"><div class="card-title">🔥 시스템</div><div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)"><span style="font-size:24px">${isDemo?'🎮':'✅'}</span><div><div style="font-weight:700">${isDemo?'데모':'Firebase 연결됨'}</div><div style="font-size:12px;color:var(--text-light)">${isDemo?'Firebase 설정 필요':'자동 저장중'}</div></div></div><div style="display:flex;align-items:center;gap:10px;padding:8px 0"><span style="font-size:24px">${GPS.ok()?'📡':'❌'}</span><div><div style="font-weight:700">GPS ${GPS.ok()?'지원':'미지원'}</div><div style="font-size:12px;color:var(--text-light)">${GPS.ok()?'추적 가능':'GPS 미지원 기기'}</div></div></div></div>
-  <div class="card" style="text-align:center;color:var(--text-light);font-size:12px">SafeKids v2.0 • GPS 추적 완료<br>다음: 카카오맵 → 푸시 알림</div>`}
+  <div class="card"><div class="card-title">🔥 시스템</div><div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)"><span style="font-size:24px">${isDemo?'🎮':'✅'}</span><div><div style="font-weight:700">${isDemo?'데모':'Firebase 연결됨'}</div><div style="font-size:12px;color:var(--text-light)">${isDemo?'Firebase 설정 필요':'자동 저장중'}</div></div></div><div style="display:flex;align-items:center;gap:10px;padding:8px 0"><span style="font-size:24px">${GPS.ok()?'📡':'❌'}</span><div><div style="font-weight:700">GPS ${GPS.ok()?'지원':'미지원'}</div><div style="font-size:12px;color:var(--text-light)">${GPS.ok()?'추적 가능':'GPS 미지원 기기'}</div></div></div><div style="display:flex;align-items:center;gap:10px;padding:8px 0"><span style="font-size:24px">${kakaoReady?'🗺️':'⏳'}</span><div><div style="font-weight:700">카카오맵 ${kakaoReady?'연결됨':'로딩중'}</div><div style="font-size:12px;color:var(--text-light)">${kakaoReady?'실제 지도 표시중':'잠시 후 다시 확인'}</div></div></div></div>
+  <div class="card" style="text-align:center;color:var(--text-light);font-size:12px">SafeKids v3.0 • 카카오맵 연동 완료<br>다음: 푸시 알림</div>`}
 
 function tog(k,l,d,v){return `<div class="setting-item"><div><div style="font-weight:600;font-size:14px">${l}</div><div style="font-size:12px;color:var(--text-light)">${d}</div></div><div class="toggle ${v?'on':'off'}" onclick="tgl('${k}')"><div class="knob"></div></div></div>`}
 function tgl(k){State.settings[k]=!State.settings[k];renderTab()}
