@@ -224,7 +224,14 @@ function stopChildMode(){GPS.stop(State.trackingWatchId);State.trackingWatchId=n
 document.getElementById('childModeScreen').classList.add('hidden');const m=document.getElementById('mainApp');m.classList.remove('hidden');m.style.display='flex';renderCurrentTab();showToast('🛑 추적 중지')}
 
 let kakaoReady=false,kakaoMap=null,kakaoMarkers=[],kakaoPolyline=null,kakaoCircles=[];
-try{kakao.maps.load(()=>{kakaoReady=true;console.log('카카오맵 로드 완료')})}catch(e){console.log('카카오맵 로드 대기중:',e)}
+function initKakao(){
+  if(typeof kakao!=='undefined'&&kakao.maps){
+    kakao.maps.load(()=>{kakaoReady=true;console.log('카카오맵 준비완료');if(State.user)try{renderTab()}catch(e){}});
+  } else {
+    setTimeout(initKakao,500);
+  }
+}
+setTimeout(initKakao,300);
 
 function renderMap2(places,locs,child,h){
   h=h||240;const all=[...places];if(locs.length)all.push(...locs);
